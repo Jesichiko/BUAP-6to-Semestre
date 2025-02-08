@@ -17,7 +17,7 @@ void* hilo1estados(void* arg) {
 void* hilo2estados(void* arg) {
     printf("Hilo2 creado y listo para ejecutarse\n");
     sleep(2);
-    printf("Hilo2 desbloqueando el hilo 1\n");
+    printf("Hilo2 desbloqueand el hilo 1\n");
     pthread_mutex_unlock(&bloqueado);
     printf("Hilo2 terminado ejecucion\n");
     pthread_exit(NULL);
