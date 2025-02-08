@@ -30,6 +30,7 @@ def generar_tabla(muestra_variables):
         
         #gracias a conteo calculamos la frecuencia relativa del evento dado
         freq_relativas = {evento: count/total for evento, count in conteo.items()}
+        
         #insertamos en el diccionario las frecuencias para cada uno
         frecuencias_variables[variable_i] = {
             'absoluta': dict(conteo),
@@ -60,4 +61,5 @@ def menu():
     generar_variables("Var Ejemplo", ["caso 1", "caso 2", "caso 3", "caso 4", "caso 5"])
     muestra_variables = generar_muestra(13)
     generar_tabla(muestra_variables)
+    
 menu()
