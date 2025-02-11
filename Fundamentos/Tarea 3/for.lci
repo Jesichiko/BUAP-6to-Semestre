@@ -6,17 +6,13 @@ Longitud = \l.
 
 ForI =\l. \diam. \long. \conti. 
 	If(IsZero (Monus long conti))Nil
-	(Cons (ForJ l diam (Add 1 conti)) (ForI l diam long (Add conti 1)));
-
-	
+	(Cons (ForJ l diam (Add 1 conti)) (ForI l diam long (Add conti 1)));	
 
 ForJ = \l. \diam. \k. 
    If (IsZero diam) 
       Nil
-      (Cons (Kaesimo l k) (ForJ l (Monus diam 1) (Add k 9)));
+      (Cons (kesimo l k) (ForJ l (Monus diam 1) (Add k 9)));
 
-
-Kaesimo = \l. \k.
+kesimo = \l. \k.
 	If (Equal k 1)  (Head l)
-	   (Kaesimo (Tail l) (Monus k 1));
-
+	   (kesimo (Tail l) (Monus k 1));
