@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')  # Alternativamente, prueba con 'GTK3Agg'
 import matplotlib.pyplot as plt
 
 sizes = {
@@ -73,7 +75,7 @@ def graficar(rangos, frecuencias, size):
     plt.xlabel("Rangos", color='#2E7D32', fontsize=14, fontweight='bold') #verde
     plt.ylabel("Frecuencia Absoluta", color='#C62828', fontsize=14, fontweight='bold') #rojo
     plt.title(f"Distribucion de Frecuencias en muestra tamaño {size}", color='#C62828', fontsize=20, fontweight='bold') #rojo
-    plt.show()
+    plt.show(block=True)
 
 def menu():
     print("Dame el tamaño de la muestra: (10, 100, 1000, millon)")
