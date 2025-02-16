@@ -10,7 +10,6 @@ public class HelloThread extends Thread{
 }
 
 //Codigo 2
-
 class HelloRunnable implements Runnable{
     @Override
     public void run(){
