@@ -2,8 +2,7 @@ import java.util.Random;
 import java.util.Vector;
 
 public class ejercicio2 {
-
-    public static class Hilo extends Thread{
+	 public static class Hilo extends Thread{
         int sum = 0, cuadrados = 0;
         Vector<Integer> vect;
         double media;
