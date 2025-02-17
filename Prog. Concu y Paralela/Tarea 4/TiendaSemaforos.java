@@ -34,9 +34,11 @@ public class TiendaSemaforos{
     public String[] agregar(int numPrenda) {
       String prenda = prendas.get(numPrenda);
       AtomicInteger cantidad = stock.get(prenda);
-
-      cantidad.addAndGet((cantidad.get() * 2) + 1);
-      return new String[]{prenda, String.valueOf(cantidad)};
+  
+      int actual = cantidad.get(); 
+      cantidad.set(actual * 2 + 1);
+  
+      return new String[]{prenda, String.valueOf(cantidad.get())};
     }
 
     public Integer getSize() { return stock.size(); }

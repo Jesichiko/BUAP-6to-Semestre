@@ -12,8 +12,6 @@ class Tienda:
             "Camisa Azul chica": 2,
             "Pantalon verde mediano": 3,
             "Tennis negros chicos": 5,
-            "Gorro cafe grande": 7,
-            "Gafas de sol grandes": 11
         }
         self.prendas = list(self.stock.keys())
     

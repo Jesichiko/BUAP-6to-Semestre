@@ -15,8 +15,6 @@ public class TiendaDekker {
             stock.put("Camisa Azul chica", 2);
             stock.put("Pantalon verde mediano", 3);
             stock.put("Tennis negros chicos", 5);
-            stock.put("Gorro cafe grande", 7);
-            stock.put("Gafas de sol grandes", 11);
             prendas = new ArrayList<>(stock.keySet());
         }
 
@@ -28,7 +26,7 @@ public class TiendaDekker {
                 return new String[]{prenda, null};
 
             stock.put(prenda, cantidad -1); // quitamos 1 del stock disponible de la prenda
-            return new String[]{prenda, String.valueOf(cantidad)};
+            return new String[]{prenda, String.valueOf(cantidad -1)};
         }
 
         public Integer getSize() { return stock.size(); }
