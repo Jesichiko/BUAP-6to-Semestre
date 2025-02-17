@@ -74,10 +74,10 @@ public class TiendaSemaforos{
 
         if (prenda.equals(null))
           System.err.println(client + " quiso comprar " + prenda +
-                             " pero ya no hay existencias\n");
+                             " pero ya no hay existencias");
         else
           System.out.println(client + " ha comprado: " + prenda +
-                             ", saliendo de la tienda...\n");
+                             ", saliendo de la tienda...");
       } catch (InterruptedException e) {
         e.printStackTrace();
       } finally {
@@ -108,7 +108,7 @@ public class TiendaSemaforos{
         String prenda = tienda.agregar(random);
         // SECCION CRITICA
 
-        System.out.println("Proveedor " + id + " ha reabastecido: " + prenda +"\n");
+        System.out.println("Proveedor " + id + " ha reabastecido: " + prenda);
       } catch (InterruptedException e) {
         e.printStackTrace();
       } finally {
@@ -149,6 +149,6 @@ public class TiendaSemaforos{
       e.printStackTrace();
     }
 
-    System.out.println(inst.toString()); // tienda al final
+    System.out.println("\n"+inst.toString()); // tienda al final
   }
 }
