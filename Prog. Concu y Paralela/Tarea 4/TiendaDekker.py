@@ -1,7 +1,6 @@
 from threading import Thread
 import random
-from typing import Dict, List
-from dataclasses import dataclass
+from typing import List
 from abc import ABC, abstractmethod
 
 flag: List[bool] = [False, False]
@@ -9,7 +8,7 @@ turn: int = 0
 
 class Tienda:
     def __init__(self):
-        self.stock: Dict[str, int] = {
+        self.stock = {
             "Camisa Azul chica": 2,
             "Pantalon verde mediano": 3,
             "Tennis negros chicos": 5,
@@ -34,10 +33,10 @@ class Tienda:
         self.stock[prenda] = cantidad
         return prenda
     
-    def get_size(self) -> int:
+    def get_size(self):
         return len(self.stock)
     
-    def __str__(self) -> str:
+    def __str__(self):
         output = ["Prenda\tCantidad disponible"]
         for prenda, cantidad in self.stock.items():
             output.append(f"{prenda}:\t{cantidad}")

@@ -9,6 +9,7 @@ public class TiendaDekker {
 
     public static class Tienda {
         private HashMap<String, Integer> stock = new HashMap<>();
+        ArrayList<String> prendas;
 
         public Tienda() {
             stock.put("Camisa Azul chica", 2);
@@ -16,45 +17,46 @@ public class TiendaDekker {
             stock.put("Tennis negros chicos", 5);
             stock.put("Gorro cafe grande", 7);
             stock.put("Gafas de sol grandes", 11);
+            prendas = new ArrayList<>(stock.keySet());
         }
 
-        public String comprar(int numPrenda) {
-            ArrayList<String> prendas = new ArrayList<>(stock.keySet());
+        public String[] comprar(int numPrenda) {
             String prenda = prendas.get(numPrenda);
+            Integer cantidad = stock.get(prenda);
 
-            if (stock.get(prenda).equals(0))
-                return null;
-            stock.put(prenda, stock.get(prenda) - 1); // quitamos 1 del stock disponible de la prenda
-            return prenda;
+            if (cantidad == 0)
+                return new String[]{prenda, null};
+
+            stock.put(prenda, cantidad -1); // quitamos 1 del stock disponible de la prenda
+            return new String[]{prenda, String.valueOf(cantidad)};
         }
 
-        public String agregar(int numPrenda) {
-            ArrayList<String> prendas = new ArrayList<>(stock.keySet());
+        public String[] agregar(int numPrenda) {
             String prenda = prendas.get(numPrenda);
-            Integer cantidad = (stock.get(prenda) * 2) + 1;//multiplicamos la cantidad que haya * 2 y le sumamos 1
-                                                           //esto para generar una condicion de carrera
+            Integer cantidad = (stock.get(prenda) * 2) + 1;
+
             stock.put(prenda, cantidad);
-            return prenda;
+            return new String[]{prenda, String.valueOf(cantidad)};
         }
 
-        public Integer getSize() {
-            return stock.size();
-        }
+        public Integer getSize() { return stock.size(); }
 
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
             sb.append("Prenda\tCantidad disponible\n");
-            stock.forEach((k, v) -> sb.append(k).append(":\t").append(v).append("\n"));
+            stock.forEach(
+                (k, v) -> sb.append(k).append(":\t").append(v).append("\n"));
             return sb.toString();
         }
     }
 
-    // Clase base para operaciones en la tienda
+    //Clase abstracta que sera la base 
+    //para aplicar dekker tanto en Cliente como en Proveedor
     static abstract class OperadorTienda implements Runnable {
         protected final int id;
         protected final Tienda tienda;
-        protected final int procesoId; // 0 o 1 para Dekker
+        protected final int procesoId; //0 o 1 para Dekker
 
         public OperadorTienda(int id, Tienda tienda, int procesoId) {
             this.id = id;
@@ -65,15 +67,13 @@ public class TiendaDekker {
         protected void entrarSeccionCritica() {
             flag[procesoId] = true;
             int otro = 1 - procesoId;
-            while (flag[otro]) {
+            while (flag[otro]) 
                 if (turn != procesoId) {
                     flag[procesoId] = false;
-                    while (turn != procesoId) {
+                    while (turn != procesoId) 
                         Thread.yield(); // Permite que otro proceso se ejecute
-                    }
                     flag[procesoId] = true;
                 }
-            }
         }
 
         protected void salirSeccionCritica() {
@@ -84,11 +84,11 @@ public class TiendaDekker {
 
     //cliente usando Dekker
     static class Cliente extends OperadorTienda {
-        private final String nombre;
+        private final String client;
 
-        public Cliente(String nombre, int id, Tienda tienda, int procesoId) {
+        public Cliente(String client, int id, Tienda tienda, int procesoId) {
             super(id, tienda, procesoId);
-            this.nombre = nombre;
+            this.client = client;
         }
 
         @Override
@@ -99,12 +99,15 @@ public class TiendaDekker {
             entrarSeccionCritica();
             try {
                 //SECCION CRITICA
-                String prenda = tienda.comprar(random);
-                if (prenda == null) 
-                    System.err.println(nombre + " quiso comprar pero ya no hay existencias");
+                String[] resultado = tienda.comprar(random);
+                //SECCION CRITICA
+
+                if (resultado[1] == null)
+                System.err.println(client + " quiso comprar " + resultado[0] +
+                                    " pero ya no hay existencias");
                 else
-                    System.out.println(nombre + " ha comprado: " + prenda + ", saliendo de la tienda...");
-                
+                System.out.println("- " +client + " ha comprado: " + resultado[0] +" - Existencias restantes: "
+                                    + resultado[1] +", saliendo de la tienda...");
             } finally {
                 salirSeccionCritica();
             }
@@ -124,9 +127,13 @@ public class TiendaDekker {
 
             entrarSeccionCritica();
             try {
+
                 //SECCION CRITICA
-                String prenda = tienda.agregar(random);
-                System.out.println("Proveedor " + id + " ha reabastecido: " + prenda + "\n");
+                String[] resultado = tienda.agregar(random);
+                //SECCION CRITICA
+
+                System.out.println("- Proveedor " + id + " ha reabastecido: " + resultado[0] 
+                          + " - Prendas actualizadas: " +resultado[1]);
             } finally {
                 salirSeccionCritica();
             }
