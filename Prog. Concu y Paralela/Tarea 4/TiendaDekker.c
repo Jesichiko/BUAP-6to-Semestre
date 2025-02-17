@@ -1,35 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #define MAX_ITEMS 5
 #define MAX_NAME_LENGTH 50
 
-//estructura para representar cada item de la tienda
 typedef struct {
     char prenda[MAX_NAME_LENGTH];
     int cantidad;
 } Articulo;
 
-//estructura para representar la tienda
 typedef struct {
     Articulo items[MAX_ITEMS];
     int size;
-    pthread_mutex_t mutex;
-}Tienda;
+} Tienda;
 
-//estructura para pasar los argumentos a los hilos
 typedef struct {
     char prenda[MAX_NAME_LENGTH];
     Tienda* store;
 } ArgumentosHilo;
 
-// Inicializar la tienda
+int turno = 0;
+int quiere_cliente = 0;
+int quiere_proveedor = 0;
+
 void tienda_iniciar(Tienda* store) {
-    pthread_mutex_init(&store->mutex, NULL);
-    
     strcpy(store->items[0].prenda, "Camisa Azul chica");
     store->items[0].cantidad = 2;
     
@@ -53,7 +50,6 @@ void tienda_imprimir(Tienda* store) {
         printf("%s:\t%d\n", store->items[i].prenda, store->items[i].cantidad);
 }
 
-// Comprar un artículo en la tienda
 void tienda_comprar(Tienda* store, int itemIndex, char* result, int* cantidad) {
     if (store->items[itemIndex].cantidad == 0) {
         strcpy(result, store->items[itemIndex].prenda);
@@ -66,11 +62,48 @@ void tienda_comprar(Tienda* store, int itemIndex, char* result, int* cantidad) {
     *cantidad = store->items[itemIndex].cantidad;
 }
 
-// Reabastecer un artículo en la tienda
+
 void tienda_reabastecer(Tienda* store, int itemIndex, char* result, int* cantidad) {
     store->items[itemIndex].cantidad = (store->items[itemIndex].cantidad * 2) + 1;
     strcpy(result, store->items[itemIndex].prenda);
     *cantidad = store->items[itemIndex].cantidad;
+}
+
+// Función de exclusión mutua del algoritmo de Dekker
+void entrar_criterio(int proceso) {
+    if (proceso == 0) { // Cliente
+        quiere_cliente = 1;
+        while (quiere_proveedor == 1) {
+            if (turno == 1) {
+                quiere_cliente = 0;
+                while (turno == 1) {
+                    // Esperar a que el proveedor termine
+                }
+                quiere_cliente = 1;
+            }
+        }
+    } else { // Proveedor
+        quiere_proveedor = 1;
+        while (quiere_cliente == 1) {
+            if (turno == 0) {
+                quiere_proveedor = 0;
+                while (turno == 0) {
+                    // Esperar a que el cliente termine
+                }
+                quiere_proveedor = 1;
+            }
+        }
+    }
+}
+
+void salir_criterio(int proceso) {
+    if (proceso == 0) { // Cliente
+        turno = 1;
+        quiere_cliente = 0;
+    } else { // Proveedor
+        turno = 0;
+        quiere_proveedor = 0;
+    }
 }
 
 // Función del hilo de cliente
@@ -80,12 +113,15 @@ void* hilo_cliente(void* arg) {
     int cantidad;
     
     int random_item = rand() % args->store->size;
-    
-    pthread_mutex_lock(&args->store->mutex);
+
+    // Entrar a la sección crítica utilizando Dekker
+    entrar_criterio(0);
+
     // Sección crítica
     tienda_comprar(args->store, random_item, result, &cantidad);
     // Fin de la sección crítica
-    pthread_mutex_unlock(&args->store->mutex);
+
+    salir_criterio(0);
     
     if (cantidad == -1) {
         fprintf(stderr, "%s quiso comprar %s pero ya no hay existencias\n", 
@@ -106,12 +142,15 @@ void* hilo_proveedor(void* arg) {
     int cantidad;
     
     int random_item = rand() % args->store->size;
-    
-    pthread_mutex_lock(&args->store->mutex);
+
+    // Entrar a la sección crítica utilizando Dekker
+    entrar_criterio(1);
+
     // Sección crítica
     tienda_reabastecer(args->store, random_item, result, &cantidad);
     // Fin de la sección crítica
-    pthread_mutex_unlock(&args->store->mutex);
+
+    salir_criterio(1);
     
     printf("- Proveedor %s ha reabastecido: %s - Prendas actualizadas: %d\n",
            args->prenda, result, cantidad);
@@ -148,13 +187,13 @@ int main() {
         pthread_create(&proveedores[i], NULL, hilo_proveedor, args);
     }
     
-    //esperamos a que los hilos terminen
+    // Esperamos a que los hilos terminen
     for (int i = 0; i < 4; i++) 
         pthread_join(clientes[i], NULL);
     for (int i = 0; i < 2; i++) 
         pthread_join(proveedores[i], NULL);
     
     tienda_imprimir(&store);  
-    pthread_mutex_destroy(&store.mutex);
+    
     return 0;
 }
