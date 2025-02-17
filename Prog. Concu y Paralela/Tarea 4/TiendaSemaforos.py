@@ -73,9 +73,11 @@ class Proveedores(Thread):
         random_num = random.randint(0,self.tienda.get_size()-1)
         try:
             self.semaforo.acquire()
+            
             #SECCION CRITICA
             resultado = self.tienda.agregar(random_num)
             #SECCION CRITICA
+            
             print(f"- Proveedor {self.id} ha reabastecido: {resultado[0]} - Prendas actualizadas: {resultado[1]}")
         except Exception as e:
             print(f"Error: {e}")

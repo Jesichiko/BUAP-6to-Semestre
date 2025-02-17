@@ -15,23 +15,22 @@ class Tienda:
             "Gorro cafe grande": 7,
             "Gafas de sol grandes": 11
         }
+        self.prendas = list(self.stock.keys())
     
     def comprar(self, num_prenda):
-        prendas = list(self.stock.keys())
-        prenda = prendas[num_prenda]
+        prenda = self.prendas[num_prenda]
         
         if self.stock[prenda] == 0:
-            return None
+            return [prenda, None]
             
         self.stock[prenda] -= 1
-        return prenda
+        return [prenda, self.stock[prenda]]
     
     def agregar(self, num_prenda):
-        prendas = list(self.stock.keys())
-        prenda = prendas[num_prenda]
+        prenda = self.prendas[num_prenda]
         cantidad = (self.stock[prenda] * 2) + 1
         self.stock[prenda] = cantidad
-        return prenda
+        return [prenda, cantidad]
     
     def get_size(self):
         return len(self.stock)
@@ -76,37 +75,37 @@ class Cliente(OperadorTienda):
         self.nombre = nombre
     
     def run(self):
-        random_num = random.randint(1, self.tienda.get_size() - 1)
+        random_num = random.randint(0, self.tienda.get_size() - 1) #[0 , getSize()]
         
         self.entrar_seccion_critica()
         try:
             #SECCION CRITICA
-            prenda = self.tienda.comprar(random_num)
+            resultado = self.tienda.comprar(random_num)
             #SECCION CRITICA
             
-            if prenda is None:
-                print(f"{self.nombre} quiso comprar pero ya no hay existencias")
+            if resultado[1] is None:
+                print(f"{self.nombre} quiso comprar {resultado[0]} pero ya no hay existencias")
             else:
-                print(f"{self.nombre} ha comprado: {prenda}, saliendo de la tienda...")
+                print(f"- {self.nombre} ha comprado: {resultado[0]} - Existencias restantes: {resultado[1]}, saliendo de la tienda...")
         finally:
             self.salir_seccion_critica()
 
 class Proveedor(OperadorTienda):
     def run(self):
-        random_num = random.randint(1, self.tienda.get_size() - 1)        
+        random_num = random.randint(0, self.tienda.get_size() - 1) #[0 , getSize()]       
         self.entrar_seccion_critica()
         try:
             #SECCION CRITICA
-            prenda = self.tienda.agregar(random_num)
+            resultado = self.tienda.agregar(random_num)
             #SECCION CRITICA
             
-            print(f"Proveedor {self.id} ha reabastecido: {prenda}")
+            print(f"- Proveedor {self.id} ha reabastecido: {resultado[0]} - Prendas actualizadas: {resultado[1]}")
         finally:
             self.salir_seccion_critica()
 
 def main():
     tienda = Tienda()
-    print(tienda)
+    print(tienda,"\n")
 
     hilos = [
         Cliente("Tadeo", 1, tienda, 0),
@@ -121,5 +120,5 @@ def main():
     for hilo in hilos:
         hilo.join()
     
-    print(tienda)
+    print("\n",tienda)
 main()

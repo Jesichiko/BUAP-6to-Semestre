@@ -94,7 +94,7 @@ public class TiendaDekker {
         @Override
         public void run() {
             Random rand = new Random();
-            Integer random = rand.nextInt(1, tienda.getSize());
+            Integer random = rand.nextInt(tienda.getSize()); //[0,getSize() )
 
             entrarSeccionCritica();
             try {
@@ -123,7 +123,7 @@ public class TiendaDekker {
         @Override
         public void run() {
             Random rand = new Random();
-            Integer random = rand.nextInt(1, tienda.getSize());
+            Integer random = rand.nextInt(tienda.getSize()); //[0,getSize() )
 
             entrarSeccionCritica();
             try {
@@ -161,6 +161,6 @@ public class TiendaDekker {
         for (Thread hilo : hilos)
             hilo.join();
 
-        System.out.println(inst.toString()); //tienda al final
+        System.out.println("\n"+inst.toString()); //tienda al final
     }
 }
