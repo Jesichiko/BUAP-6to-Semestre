@@ -84,6 +84,9 @@ void* hilo_cliente(void* arg) {
     char result[MAX_NAME_LENGTH];
     int cantidad;
     
+    // Inicializar la semilla de rand() con el tiempo actual más el ID del hilo
+    srand(time(NULL) + args->id);
+    
     int random_item = rand() % args->store->size;
     
     tienda_comprar(args->store, random_item, result, &cantidad, args->id);
@@ -101,8 +104,6 @@ void* hilo_cliente(void* arg) {
 }
 
 int main() {
-    srand(time(NULL));  // Inicializar la semilla de rand() con el tiempo actual
-
     Tienda store;
     tienda_iniciar(&store);
     
