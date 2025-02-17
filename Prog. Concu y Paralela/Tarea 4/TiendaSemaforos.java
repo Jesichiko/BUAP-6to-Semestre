@@ -41,7 +41,7 @@ public class TiendaSemaforos {
       cantidad.set(actual * 2 + 1);
 
       return new String[] {prenda, String.valueOf(cantidad.get())};
-    }
+		} 
 
     public Integer getSize() { return stock.size(); }
 
