@@ -1,6 +1,6 @@
-from threading import Thread, Semaphore
 import random
-from typing import Dict, List
+from threading import Semaphore, Thread
+
 
 class Tienda:
     def __init__(self):
@@ -9,7 +9,7 @@ class Tienda:
             "Pantalon verde mediano": 3,
             "Tennis negros chicos": 5,
             "Gorro cafe grande": 7,
-            "Gafas de sol grandes": 11
+            "Gafas de sol grandes": 11,
         }
         self.prendas = list(self.stock.keys())
 
@@ -37,6 +37,7 @@ class Tienda:
             sb.append(f"{prenda}:\t{cantidad}\n")
         return "".join(sb)
 
+
 class Cliente(Thread):
     def __init__(self, nombre, tienda, semaforo):
         super().__init__()
@@ -45,22 +46,27 @@ class Cliente(Thread):
         self.semaforo = semaforo
 
     def run(self):
-        random_num = random.randint(0,self.tienda.get_size()-1)
+        random_num = random.randint(0, self.tienda.get_size() - 1)
         try:
             self.semaforo.acquire()
-            
-            #SECCION CRITICA
+
+            # SECCION CRITICA
             resultado = self.tienda.comprar(random_num)
-            #SECCION CRITICA
-            
+            # SECCION CRITICA
+
             if resultado[1] is None:
-                print(f"{self.nombre} quiso comprar {resultado[0]} pero ya no hay existencias")
+                print(
+                    f"{self.nombre} quiso comprar {resultado[0]} pero ya no hay existencias"
+                )
             else:
-                print(f"- {self.nombre} ha comprado: {resultado[0]} - Existencias restantes: {resultado[1]}, saliendo de la tienda...")
+                print(
+                    f"- {self.nombre} ha comprado: {resultado[0]} - Existencias restantes: {resultado[1]}, saliendo de la tienda..."
+                )
         except Exception as e:
             print(f"Error: {e}")
         finally:
             self.semaforo.release()
+
 
 class Proveedores(Thread):
     def __init__(self, id_proveedor: int, tienda: Tienda, semaforo: Semaphore):
@@ -70,25 +76,28 @@ class Proveedores(Thread):
         self.semaforo = semaforo
 
     def run(self):
-        random_num = random.randint(0,self.tienda.get_size()-1)
+        random_num = random.randint(0, self.tienda.get_size() - 1)
         try:
             self.semaforo.acquire()
-            
-            #SECCION CRITICA
+
+            # SECCION CRITICA
             resultado = self.tienda.agregar(random_num)
-            #SECCION CRITICA
-            
-            print(f"- Proveedor {self.id} ha reabastecido: {resultado[0]} - Prendas actualizadas: {resultado[1]}")
+            # SECCION CRITICA
+
+            print(
+                f"- Proveedor {self.id} ha reabastecido: {resultado[0]} - Prendas actualizadas: {resultado[1]}"
+            )
         except Exception as e:
             print(f"Error: {e}")
         finally:
             self.semaforo.release()
 
+
 def main():
     tienda = Tienda()
-    #semaforo de tamaño 1 solo puede acceder un solo hilo al codigo de la seccion critica
+    # semaforo de tamaño 1 solo puede acceder un solo hilo al codigo de la seccion critica
     semaforo = Semaphore(1)
-    print(tienda)  #tienda al principio
+    print(tienda)  # tienda al principio
 
     cliente1 = Cliente("Paco", tienda, semaforo)
     cliente2 = Cliente("Memo", tienda, semaforo)
@@ -104,8 +113,10 @@ def main():
     proveedor2.start()
     cliente4.start()
 
-    #esperamos a que terminen todos los hilos
+    # esperamos a que terminen todos los hilos
     for thread in [cliente1, proveedor1, cliente2, cliente3, proveedor2, cliente4]:
         thread.join()
-    print("\n",tienda)  #tienda al final
+    print("\n", tienda)  # tienda al final
+
+
 main()

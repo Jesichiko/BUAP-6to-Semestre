@@ -4,11 +4,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TiendaSemaforos{
+public class TiendaSemaforos {
 
   // recurso compartido, en este caso acceso a la tienda
   public static class Tienda {
-    private ConcurrentHashMap<String, AtomicInteger> stock = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, AtomicInteger> stock =
+        new ConcurrentHashMap<>();
     private ArrayList<String> prendas;
 
     public Tienda() {
@@ -25,20 +26,21 @@ public class TiendaSemaforos{
       AtomicInteger cantidad = stock.get(prenda);
 
       if (cantidad.get() == 0)
-        return new String[]{prenda, null};
+        return new String[] {prenda, null};
 
-      cantidad.decrementAndGet(); // quitamos 1 del stock disponible de la prenda
-      return new String[]{prenda, String.valueOf(cantidad)};
+      cantidad
+          .decrementAndGet(); // quitamos 1 del stock disponible de la prenda
+      return new String[] {prenda, String.valueOf(cantidad)};
     }
 
     public String[] agregar(int numPrenda) {
       String prenda = prendas.get(numPrenda);
       AtomicInteger cantidad = stock.get(prenda);
-  
-      int actual = cantidad.get(); 
+
+      int actual = cantidad.get();
       cantidad.set(actual * 2 + 1);
-  
-      return new String[]{prenda, String.valueOf(cantidad.get())};
+
+      return new String[] {prenda, String.valueOf(cantidad.get())};
     }
 
     public Integer getSize() { return stock.size(); }
@@ -47,8 +49,8 @@ public class TiendaSemaforos{
     public String toString() {
       StringBuilder sb = new StringBuilder();
       sb.append("Prenda \tCantidad disponible\n");
-      stock.forEach((k, v) -> 
-          sb.append(k).append(":\t").append(v.get()).append("\n"));
+      stock.forEach(
+          (k, v) -> sb.append(k).append(":\t").append(v.get()).append("\n"));
       return sb.toString();
     }
   }
@@ -79,8 +81,9 @@ public class TiendaSemaforos{
           System.err.println(client + " quiso comprar " + resultado[0] +
                              " pero ya no hay existencias");
         else
-          System.out.println("- " +client + " ha comprado: " + resultado[0] +" - Existencias restantes: "
-                             + resultado[1] +", saliendo de la tienda...");
+          System.out.println("- " + client + " ha comprado: " + resultado[0] +
+                             " - Existencias restantes: " + resultado[1] +
+                             ", saliendo de la tienda...");
       } catch (InterruptedException e) {
         e.printStackTrace();
       } finally {
@@ -110,14 +113,15 @@ public class TiendaSemaforos{
         // SECCION CRITICA
         String[] resultado = tienda.agregar(random);
         // SECCION CRITICA
-        
-        System.out.println("- Proveedor " + id + " ha reabastecido: " + resultado[0] 
-                          + " - Prendas actualizadas: " +resultado[1]);
+
+        System.out.println("- Proveedor " + id +
+                           " ha reabastecido: " + resultado[0] +
+                           " - Prendas actualizadas: " + resultado[1]);
       } catch (InterruptedException e) {
         e.printStackTrace();
       } finally {
-        semaforo.release();      
-			}
+        semaforo.release();
+      }
     }
   }
 
@@ -125,7 +129,7 @@ public class TiendaSemaforos{
     Tienda inst = new Tienda();
     Semaphore semaforo =
         new Semaphore(3); // semaforo de tamaño 2, es decir, solo pueden acceder
-													// dos hilos a la seccion critica a la vez
+    // dos hilos a la seccion critica a la vez
     System.out.println(inst.toString()); // tienda al principio
 
     Cliente cliente1 = new Cliente("Pedro", inst, semaforo);
@@ -153,6 +157,6 @@ public class TiendaSemaforos{
       e.printStackTrace();
     }
 
-    System.out.println("\n"+inst.toString()); // tienda al final
+    System.out.println("\n" + inst.toString()); // tienda al final
   }
 }
