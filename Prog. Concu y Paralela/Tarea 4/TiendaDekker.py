@@ -4,9 +4,8 @@ from typing import Dict, List
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
-# Shared variables for Dekker's algorithm
-flag: List[bool] = [False, False]  # intention to enter
-turn: int = 0  # whose turn it is
+flag: List[bool] = [False, False]
+turn: int = 0
 
 class Tienda:
     def __init__(self):
@@ -18,20 +17,20 @@ class Tienda:
             "Gafas de sol grandes": 11
         }
     
-    def comprar(self, num_prenda: int) -> str | None:
+    def comprar(self, num_prenda):
         prendas = list(self.stock.keys())
         prenda = prendas[num_prenda]
         
         if self.stock[prenda] == 0:
             return None
             
-        self.stock[prenda] -= 1  # remove 1 from available stock
+        self.stock[prenda] -= 1
         return prenda
     
-    def agregar(self, num_prenda: int) -> str:
+    def agregar(self, num_prenda):
         prendas = list(self.stock.keys())
         prenda = prendas[num_prenda]
-        cantidad = (self.stock[prenda] * 2) + 1  # multiply current quantity by 2 and add 1
+        cantidad = (self.stock[prenda] * 2) + 1
         self.stock[prenda] = cantidad
         return prenda
     
@@ -60,7 +59,7 @@ class OperadorTienda(ABC, Thread):
             if turn != self.proceso_id:
                 flag[self.proceso_id] = False
                 while turn != self.proceso_id:
-                    pass  # yield to other process
+                    pass 
                 flag[self.proceso_id] = True
     
     def salir_seccion_critica(self):
