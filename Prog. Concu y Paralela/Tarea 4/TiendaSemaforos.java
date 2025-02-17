@@ -3,7 +3,7 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 
-public class TiendaMutex {
+public class TiendaSemaforos{
 
   // recurso compartido, en este caso acceso a la tienda
   public static class Tienda {
@@ -30,10 +30,11 @@ public class TiendaMutex {
       return prenda;
     }
 
-    public String agregar(int numPrenda, Integer num) {
+    public String agregar(int numPrenda) {
       ArrayList<String> prendas = new ArrayList<>(stock.keySet());
       String prenda = prendas.get(numPrenda);
-      stock.put(prenda, (num * 2) + 1);
+      Integer cantidad = (stock.get(prenda) * 2) + 1;
+      stock.put(prenda, cantidad);
       return prenda;
     }
 
@@ -99,12 +100,12 @@ public class TiendaMutex {
     @Override
     public void run() {
       Random rand = new Random();
-      Integer random = rand.nextInt(tienda.getSize());
+      Integer random = rand.nextInt(1, tienda.getSize());
       try {
         semaforo.acquire();
 
         // SECCION CRITICA
-        String prenda = tienda.comprar(random);
+        String prenda = tienda.agregar(random);
         // SECCION CRITICA
 
         System.out.println("Proveedor " + id + " ha reabastecido: " + prenda +"\n");
