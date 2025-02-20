@@ -1,0 +1,22 @@
+# a:s:i:c:i:f:r:a:b:a:n:c:o:n:l:a:e:s:c:i:t:a:l:a:Nil
+Longitud = \l.
+   If (IsNil l) 
+      0
+      (Add 1 (Longitud (Tail l)));
+
+ForI =\l. \diam. \long. \conti. 
+	If(IsZero (Monus long conti))Nil
+	(Cons (ForJ l diam (Add 1 conti)) (ForI l diam long (Add conti 1)));
+
+	
+
+ForJ = \l. \diam. \k. 
+   If (IsZero diam) 
+      Nil
+      (Cons (Kaesimo l k) (ForJ l (Monus diam 1) (Add k 9)));
+
+
+Kaesimo = \l. \k.
+	If (Equal k 1)  (Head l)
+	   (Kaesimo (Tail l) (Monus k 1));
+
