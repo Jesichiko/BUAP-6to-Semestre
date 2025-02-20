@@ -1,3 +1,4 @@
+package Dekker;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -6,8 +7,42 @@ public class TiendaDekker {
 	// variables compartidas para dekker
 	private static volatile boolean[] flag = {
 			false, false }; // banderas para indicar que un hilo quiere entrar a la
-											// seccion critica
+							// seccion critica
 	private static volatile int turno = 0; // var de turno, decide quien de varios hilos entra si ambos lo desean
+	
+	public final static class Dekker{
+
+		protected void entrarSeccionCritica(int hiloId) {
+			flag[hiloId] = true; // el hilo i (actual) tiene la intencion de entrar a
+														// la seccion critica
+
+			int otro = 1 - hiloId; // hilo oponente que compite (si el hilo actual es
+															// 1, el otro es 0 y viceversa)
+
+			while (flag[otro]) { // si el otro hilo quiere entrar
+
+				// se compite por la seccion critica
+
+				if (turno != hiloId) { // si el turno no le toca al hilo actual entonces espera
+
+					flag[hiloId] = false; // cede el paso hilo oponente
+
+					while (turno != hiloId) // espera su turno
+						Thread.yield(); // permite que el otro hilo se ejecute mientras no
+														// sea su turno
+
+					flag[hiloId] = true; // vuelve a intentar entrar, se repite el ciclo
+				}
+			}
+		}
+
+		protected void salirSeccionCritica(int hiloId) {
+			turno = 1 - hiloId; // cuando el hilo en turno terminal cede el turno a su
+													// oponente (1 a 0, 0 a 1)
+
+			flag[hiloId] = false; // da la intencion de que ya no quiere entrar
+		}
+	}
 
 	public static class Tienda {
 		private HashMap<String, Integer> stock = new HashMap<>();
@@ -32,9 +67,7 @@ public class TiendaDekker {
 			return new String[] { prenda, String.valueOf(cantidad - 1) };
 		}
 
-		public Integer getSize() {
-			return stock.size();
-		}
+		public Integer getSize() { return stock.size(); }
 
 		@Override
 		public String toString() {
@@ -46,67 +79,27 @@ public class TiendaDekker {
 		}
 	}
 
-	// Clase abstracta que sera la base
-	// para aplicar dekker tanto en Cliente como en Proveedor
-	abstract static class OperadorTienda implements Runnable {
-		protected final int id;
-		protected final Tienda tienda;
-		protected final int hiloId; // 0 o 1 para Dekker
-
-		public OperadorTienda(int id, Tienda tienda, int procesoId) {
-			this.id = id;
-			this.tienda = tienda;
-			this.hiloId = procesoId;
-		}
-
-		protected void entrarSeccionCritica() {
-			flag[hiloId] = true; // el hilo i (actual) tiene la intencion de entrar a
-														// la seccion critica
-
-			int otro = 1 - hiloId; // hilo oponente que compite (si el hilo actual es
-															// 1, el otro es 0 y viceversa)
-
-			while (flag[otro]) { // si el otro hilo quiere entrar
-
-				// se compite por la seccion critica
-
-				if (turno != hiloId) { // si el turno no le toca al hilo actual entonces espera
-
-					flag[hiloId] = false; // cede el paso hilo oponente
-
-					while (turno != hiloId) // espera su turno
-						Thread.yield(); // permite que el otro hilo se ejecute mientras no
-														// sea su turno
-
-					flag[hiloId] = true; // vuelve a intentar entrar, se repite el ciclo
-				}
-			}
-		}
-
-		protected void salirSeccionCritica() {
-			turno = 1 - hiloId; // cuando el hilo en turno terminal cede el turno a su
-													// oponente (1 a 0, 0 a 1)
-
-			flag[hiloId] = false; // da la intencion de que ya no quiere entrar
-		}
-	}
-
 	// cliente usando Dekker
-	static class Cliente extends OperadorTienda {
+	public static class Cliente extends Thread {
+		private final Dekker dekker;
+		private final Tienda tienda;
 		private final String client;
+		private final int hiloId;
 
-		public Cliente(String client, int id, Tienda tienda, int procesoId) {
-			super(id, tienda, procesoId);
+		public Cliente(String client, int hiloId, Tienda tienda, Dekker dekker) {
+			this.hiloId = hiloId;
+			this.tienda = tienda;
 			this.client = client;
+			this.dekker = dekker;
 		}
 
 		@Override
 		public void run() {
-			Random rand = new Random();
-			Integer random = rand.nextInt(tienda.getSize()); // [0,getSize() )
+			Integer random = new Random().nextInt(tienda.getSize()); // [0,getSize() )
 
-			entrarSeccionCritica();
+			dekker.entrarSeccionCritica(hiloId);
 			try {
+
 				// SECCION CRITICA
 				String[] resultado = tienda.comprar(random);
 				// SECCION CRITICA
@@ -119,19 +112,20 @@ public class TiendaDekker {
 							" - Existencias restantes: " + resultado[1] +
 							", saliendo de la tienda...");
 			} finally {
-				salirSeccionCritica();
+				dekker.salirSeccionCritica(hiloId);
 			}
 		}
 	}
 
 	public static void main(String[] args) throws InterruptedException {
-		Tienda inst = new Tienda();
-		System.out.println(inst.toString()); // tienda al principio
-
-		// creamos los hilos alternando entre proceso 0 y 1
+		Dekker dekker = new Dekker();
 		Thread[] hilos = new Thread[2];
-		hilos[0] = new Thread(new Cliente("Pedro", 1, inst, 0));
-		hilos[1] = new Thread(new Cliente("Luis", 2, inst, 1));
+		Tienda inst = new Tienda();
+		
+		System.out.println(inst.toString()); // tienda al principio
+		// creamos los hilos alternando entre proceso 0 y 1
+		hilos[0] = new Cliente("Pedro", 1, inst, dekker); 
+		hilos[1] = new Cliente("Luis", 0, inst, dekker);
 
 		// iniciamos los hilos
 		for (Thread hilo : hilos)

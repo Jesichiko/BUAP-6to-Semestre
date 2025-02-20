@@ -1,11 +1,13 @@
+package Monitores;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
 public class TiendaDekkerMonitor {
-    static class MonitorDekker {
+    
+    public static class MonitorDekker {
         private int turno = 0;
-
+        
         public synchronized void entrar(int hiloId) {
             while (turno != hiloId) {
                 try {
@@ -56,32 +58,22 @@ public class TiendaDekkerMonitor {
         }
     }
 
-    abstract static class OperadorTienda implements Runnable {
-        protected final MonitorDekker monitor;
-        protected final Tienda tienda;
-        protected final int hiloId;
-        protected final int id;
+    public static class Cliente extends Thread {
+        private final MonitorDekker monitor;
+        private final String nombre;
+        private final Tienda tienda;
+        private final int hiloId;
 
-        public OperadorTienda(int id, Tienda tienda, int hiloId, MonitorDekker monitor) {
-            this.id = id;
+        public Cliente(String nombre, Tienda tienda, int hiloId, MonitorDekker monitor) {
+            this.nombre = nombre;
             this.tienda = tienda;
             this.hiloId = hiloId;
             this.monitor = monitor;
         }
-    }
-
-    static class Cliente extends OperadorTienda {
-        private final String client;
-
-        public Cliente(String client, int id, Tienda tienda, int hiloId, MonitorDekker monitor) {
-            super(id, tienda, hiloId, monitor);
-            this.client = client;
-        }
 
         @Override
         public void run() {
-            Random rand = new Random();
-            Integer random = rand.nextInt(tienda.getSize());
+            int random = new Random().nextInt(tienda.getSize());
 
             monitor.entrar(hiloId);
             try {
@@ -90,12 +82,11 @@ public class TiendaDekkerMonitor {
                 //SECCION CRITICA
 
                 if (resultado[1] == null)
-                    System.err.println(client + " quiso comprar " + resultado[0] +
+                    System.err.println(nombre + " quiso comprar " + resultado[0] + 
                             " pero ya no hay existencias");
                 else
-                    System.out.println("- " + client + " ha comprado: " + resultado[0] +
-                            " - Existencias restantes: " + resultado[1] +
-                            ", saliendo de la tienda...");
+                    System.out.println("- " + nombre + " ha comprado: " + resultado[0] +
+                            " - Existencias restantes: " + resultado[1]);
             } finally {
                 monitor.salir(hiloId);
             }
@@ -104,19 +95,18 @@ public class TiendaDekkerMonitor {
 
     public static void main(String[] args) throws InterruptedException {
         MonitorDekker monitor = new MonitorDekker();
-        Tienda inst = new Tienda();
-        System.out.println(inst.toString());
-
         Thread[] hilos = new Thread[2];
-        hilos[0] = new Thread(new Cliente("Pedro", 1, inst, 0, monitor));
-        hilos[1] = new Thread(new Cliente("Luis", 2, inst, 1, monitor));
+        Tienda inst = new Tienda();
+       
+        System.out.println(inst.toString());
+        hilos[0] = new Cliente("Pedro", inst, 0, monitor);
+        hilos[1] = new Cliente("Luis", inst, 1, monitor);
 
         for (Thread hilo : hilos)
             hilo.start();
 
         for (Thread hilo : hilos)
             hilo.join();
-
         System.out.println("\n" + inst.toString());
     }
 }
