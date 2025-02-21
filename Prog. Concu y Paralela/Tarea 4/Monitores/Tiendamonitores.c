@@ -13,11 +13,11 @@ typedef struct {
   int cantidad;
 } Articulo;
 
-// estructura para representar la tienda
+// estructura de la tienda siendo monitor
 typedef struct {
   Articulo items[MAX_ITEMS];
   int size;
-  pthread_mutex_t mutex;
+  pthread_mutex_t mutex;  
 } Tienda;
 
 // estructura para pasar los argumentos a los hilos
@@ -55,23 +55,18 @@ void tienda_imprimir(Tienda *store) {
 
 // Comprar un artículo en la tienda
 void tienda_comprar(Tienda *store, int itemIndex, char *result, int *cantidad) {
+    pthread_mutex_lock(&store->mutex);  // Entrada a la sección crítica
   if (store->items[itemIndex].cantidad == 0) {
     strcpy(result, store->items[itemIndex].prenda);
     *cantidad = -1;
+    pthread_mutex_unlock(&store->mutex);  // Salida de la sección crítica
     return;
   }
 
   store->items[itemIndex].cantidad--;
   strcpy(result, store->items[itemIndex].prenda);
   *cantidad = store->items[itemIndex].cantidad;
-}
-
-// Reabastecer un artículo en la tienda
-void tienda_reabastecer(Tienda *store, int itemIndex, char *result,
-                        int *cantidad) {
-  store->items[itemIndex].cantidad = (store->items[itemIndex].cantidad * 2) + 1;
-  strcpy(result, store->items[itemIndex].prenda);
-  *cantidad = store->items[itemIndex].cantidad;
+    pthread_mutex_unlock(&store->mutex);  // Salida de la sección crítica
 }
 
 // Función del hilo de cliente
@@ -82,24 +77,28 @@ void *hilo_cliente(void *arg) {
 
   int random_item = rand() % args->store->size;
 
-  pthread_mutex_lock(&args->store->mutex);
   // Sección crítica
   tienda_comprar(args->store, random_item, result, &cantidad);
-  // Fin de la sección crítica
-  pthread_mutex_unlock(&args->store->mutex);
 
   if (cantidad == -1) {
-    fprintf(stderr, "%s quiso comprar %s pero ya no hay existencias\n",
-            args->prenda, result);
+    printf("- %s quiso comprar %s pero ya no hay existencias\n",args->prenda, result);
   } else {
-    printf("- %s ha comprado: %s - Existencias restantes: %d, saliendo de la "
-           "tienda...\n",
-           args->prenda, result, cantidad);
+    printf("- %s ha comprado: %s - Existencias restantes: %d, saliendo de la " "tienda...\n",args->prenda, result, cantidad);
   }
 
   free(arg);
   return NULL;
 }
+
+// Reabastecer un artículo en la tienda
+void tienda_reabastecer(Tienda *store, int itemIndex, char *result,int *cantidad) {
+    pthread_mutex_lock(&store->mutex);  // Entrada a la sección crítica
+    store->items[itemIndex].cantidad = (store->items[itemIndex].cantidad * 2) + 1;
+    strcpy(result, store->items[itemIndex].prenda);
+    *cantidad = store->items[itemIndex].cantidad;
+    pthread_mutex_unlock(&store->mutex);  // Salida de la sección crítica
+}
+
 
 // Función del hilo de proveedor
 void *hilo_proveedor(void *arg) {
@@ -109,11 +108,8 @@ void *hilo_proveedor(void *arg) {
 
   int random_item = rand() % args->store->size;
 
-  pthread_mutex_lock(&args->store->mutex);
-  // Sección crítica
+  // Sección crítica protegida por 
   tienda_reabastecer(args->store, random_item, result, &cantidad);
-  // Fin de la sección crítica
-  pthread_mutex_unlock(&args->store->mutex);
 
   printf("- Proveedor %s ha reabastecido: %s - Prendas actualizadas: %d\n",
          args->prenda, result, cantidad);
@@ -125,6 +121,8 @@ void *hilo_proveedor(void *arg) {
 int main() {
   Tienda store;
   tienda_iniciar(&store);
+  srand(time(NULL));
+
 
   printf("Estado inicial de la tienda:\n");
   tienda_imprimir(&store);
